@@ -1,0 +1,36 @@
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
+
+class CidSugerido(BaseModel):
+    """Categoria do CID-10 sugerida para um sintoma."""
+
+    sintoma: str = Field(description="Sintoma ou sinal clinico do prontuario")
+    codigo: str = Field(description="Codigo da categoria no CID-10, ex.: R07")
+    descricao: str = Field(description="Descricao da categoria no CID-10")
+
+
+class ParecerCardiologico(BaseModel):
+    """Parecer emitido pelo agente cardiologista."""
+
+    hipotese_diagnostica: str = Field(description="Hipotese diagnostica cardiologica principal")
+    risco: Literal["alto", "moderado", "baixo"] = Field(description="Nivel de risco cardiovascular imediato")
+    condutas: list[str] = Field(description="Condutas e exames iniciais sugeridos, ex.: ECG, troponina")
+
+
+class State(BaseModel):
+    """Atendimento de Prontuarios medicos"""
+
+    paciente_id: str = Field(..., description="ID do paciente")
+    prontuario: str = Field(..., description="Conteudo do prontuario medico")
+    # Preenchidos pelo no de atendimento (triagem): nao vem na entrada.
+    urgencia: Literal["urgente", "nao_urgente"] | None = Field(None, description="Nivel de urgencia do atendimento")
+    justificativa: str | None = Field(None, description="Motivo da classificacao de urgencia")
+    especialidade: Literal["cardiologia", "geral"] | None = Field(None, description="Especialidade indicada pela triagem")
+    # Preenchidos pelo agente_urgencia ou pelo agente_cardiologista (so um deles roda).
+    sintomas: list[str] = Field(default_factory=list, description="Sintomas separados do prontuario")
+    cids_sugeridos: list[CidSugerido] = Field(default_factory=list, description="Categorias do CID-10 sugeridas por sintoma")
+    # Preenchido pelo agente_cardiologista: so quando a triagem indica cardiologia.
+    parecer_cardiologico: ParecerCardiologico | None = Field(None, description="Parecer do cardiologista")
+    data_atualizacao: str = Field(..., description="Data da ultima atualizacao do prontuario")
