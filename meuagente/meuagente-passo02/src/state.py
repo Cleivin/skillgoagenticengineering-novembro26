@@ -18,8 +18,14 @@ class State(BaseModel):
     prontuario: str = Field(..., description="Conteudo do prontuario medico")
     # Preenchidos pelo no de atendimento (triagem): nao vem na entrada.
     urgencia: Literal["urgente", "nao_urgente"] | None = Field(None, description="Nivel de urgencia do atendimento")
+    destino: Literal["cardiologico", "urgente", "nao_urgente"] | None = Field(
+        None, description="Destino da triagem: cardiologista, urgencia ou fim"
+    )
     justificativa: str | None = Field(None, description="Motivo da classificacao de urgencia")
-    # Preenchidos pelo no agente_urgencia: so quando o prontuario e urgente.
+    # Preenchidos pelo agente_urgencia ou pelo cardiologista.
     sintomas: list[str] = Field(default_factory=list, description="Sintomas separados do prontuario")
     cids_sugeridos: list[CidSugerido] = Field(default_factory=list, description="Categorias do CID-10 sugeridas por sintoma")
+    # Preenchidos pelo no cardiologista.
+    avaliacao_cardiologica: str | None = Field(None, description="Parecer clinico cardiologico")
+    conduta_sugerida: str | None = Field(None, description="Conduta ou proximos passos sugeridos")
     data_atualizacao: str = Field(..., description="Data da ultima atualizacao do prontuario")

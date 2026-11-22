@@ -1,27 +1,41 @@
-"""No de atendimento: faz a triagem do prontuario e classifica a urgencia."""
+"""No de atendimento: faz a triagem do prontuario e escolhe o destino."""
 
-from typing import Literal # Para definir tipos literais como "urgente" e "nao_urgente"
-from pydantic import BaseModel, Field # 
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
 from src.services.llm import modelo
 from src.state import State
 
 PROMPT_TRIAGEM = """Voce e um profissional de triagem em um servico de saude.
-Leia o prontuario e classifique o atendimento:
+Leia o prontuario e classifique o destino do atendimento:
 
-- "urgente": risco imediato a vida ou de agravamento rapido. Exemplos: dor toracica,
-  falta de ar, rebaixamento de consciencia, sinais de AVC, sangramento ativo,
-  sinais vitais instaveis, trauma grave, reacao alergica grave, dor intensa e subita.
+- "cardiologico": queixa ou achado predominantemente cardiaco. Exemplos: dor
+  toracica, palpitacao, sincope suspeita cardiaca, edema com dispneia sugestiva
+  de insuficiencia cardiaca, sinais de sindrome coronariana aguda.
+- "urgente": risco imediato a vida ou de agravamento rapido, sem predominancia
+  cardiaca. Exemplos: rebaixamento de consciencia, sinais de AVC, sangramento
+  ativo, trauma grave, reacao alergica grave, dor intensa e subita nao toracica,
+  sinais vitais instaveis por causa nao tipicamente cardiologica.
 - "nao_urgente": quadro estavel, queixas leves ou cronicas, rotina, renovacao de
   receita, acompanhamento.
 
-Na duvida, classifique como "urgente".
+Se houver sinal cardiaco claro, prefira "cardiologico" em vez de "urgente".
+Na duvida entre urgente e nao_urgente (sem quadro cardiaco), classifique como "urgente".
+Tambem informe se o caso e "urgente" ou "nao_urgente" no nivel de urgencia geral
+(cardiologico conta como urgente).
 Justifique em uma ou duas frases, citando os achados do prontuario."""
 
-# Modelo de classificacao de urgencia do atendimento
+
 class Classificacao(BaseModel):
     """Resultado da triagem."""
 
-    urgencia: Literal["urgente", "nao_urgente"] = Field(description="Nivel de urgencia")
+    destino: Literal["cardiologico", "urgente", "nao_urgente"] = Field(
+        description="Destino do atendimento apos a triagem"
+    )
+    urgencia: Literal["urgente", "nao_urgente"] = Field(
+        description="Nivel de urgencia geral (cardiologico e urgente)"
+    )
     justificativa: str = Field(description="Motivo da classificacao")
 
 
@@ -34,4 +48,8 @@ def atendimento(state: State) -> dict:
             ("human", state.prontuario),
         ]
     )
-    return {"urgencia": resultado.urgencia, "justificativa": resultado.justificativa}
+    return {
+        "destino": resultado.destino,
+        "urgencia": resultado.urgencia,
+        "justificativa": resultado.justificativa,
+    }
