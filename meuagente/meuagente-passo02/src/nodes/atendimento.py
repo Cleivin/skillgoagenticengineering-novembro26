@@ -16,27 +16,32 @@ Leia o prontuario e classifique o destino do atendimento:
 - "cardiologico": queixa ou achado predominantemente cardiaco. Exemplos: dor
   toracica, palpitacao, sincope suspeita cardiaca, edema com dispneia sugestiva
   de insuficiencia cardiaca, sinais de sindrome coronariana aguda.
+- "neurologico": queixa ou achado predominantemente neurologico, mesmo quando
+  urgente. Exemplos: deficit motor ou sensitivo focal, desvio de rima, alteracao
+  aguda da fala, suspeita de AVC, crise convulsiva, cefaleia subita e intensa
+  ("em trovao"), rebaixamento de consciencia de causa neurologica, vertigem com
+  sinais focais (diplopia, disartria, ataxia).
 - "urgente": risco imediato a vida ou de agravamento rapido, sem predominancia
-  cardiaca nem dermatologica. Exemplos: rebaixamento de consciencia, sinais de
-  AVC, sangramento ativo, trauma grave, reacao alergica grave sistemica, dor
-  intensa e subita nao toracica, sinais vitais instaveis por causa nao tipicamente
-  cardiologica nem cutanea.
-- "nao_urgente": quadro estavel, queixas leves ou cronicas, rotina, renovacao de
-  receita, acompanhamento.
+  cardiaca, neurologica nem dermatologica. Exemplos: sangramento ativo, trauma
+  grave, reacao alergica grave sistemica, dor intensa e subita nao toracica,
+  sinais vitais instaveis por causa nao tipicamente cardiologica, neurologica
+  nem cutanea.
+- "clinicogeral": quadro estavel, queixas leves ou cronicas, rotina, renovacao
+  de receita, acompanhamento em atencao primaria — nao urgente.
 
-Prioridade na duvida: sinal cardiaco claro -> "cardiologico"; senao, queixa de
-pele clara -> "dermatologico"; senao, entre urgente e nao_urgente, prefira "urgente".
+Prioridade na duvida: cardiologico > neurologico > dermatologico > urgente >
+clinicogeral.
 Tambem informe se o caso e "urgente" ou "nao_urgente" no nivel de urgencia geral
-(cardiologico e dermatologico contam como urgente quando houver risco clinico).
+(especialidades com risco clinico imediato contam como urgente).
 Justifique em uma ou duas frases, citando os achados do prontuario."""
 
 
 class Classificacao(BaseModel):
     """Resultado da triagem."""
 
-    destino: Literal["dermatologico", "cardiologico", "urgente", "nao_urgente"] = Field(
-        description="Destino do atendimento apos a triagem"
-    )
+    destino: Literal[
+        "dermatologico", "cardiologico", "neurologico", "urgente", "clinicogeral"
+    ] = Field(description="Destino do atendimento apos a triagem")
     urgencia: Literal["urgente", "nao_urgente"] = Field(
         description="Nivel de urgencia geral"
     )
