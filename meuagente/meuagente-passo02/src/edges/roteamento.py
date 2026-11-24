@@ -9,6 +9,13 @@ Destino = Literal[
 ]
 
 
+def rotear_guardrail_entrada(state: State) -> Literal["liberado", "bloqueado"]:
+    """So segue para a triagem se o guardrail de entrada liberou."""
+    if state.guardrail_entrada is not None and not state.guardrail_entrada.bloqueado:
+        return "liberado"
+    return "bloqueado"
+
+
 def rotear_por_urgencia(state: State) -> Destino:
     """Segue o ramo definido pelo atendimento. Sem classificacao, trata como urgente."""
     if state.destino in (

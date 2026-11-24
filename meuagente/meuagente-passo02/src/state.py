@@ -3,6 +3,26 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
+class AchadoGuardrail(BaseModel):
+    """Problema encontrado pelo guardrail (sem o valor bruto encontrado)."""
+
+    tipo: Literal["segredo", "pii", "injecao", "tamanho"] = Field(
+        description="Categoria do achado"
+    )
+    regra: str = Field(description="Regra que encontrou, ex.: cpf, chave_openai")
+    quantidade: int = Field(description="Quantas ocorrencias foram encontradas")
+
+
+class ResultadoGuardrail(BaseModel):
+    """Resultado de um guardrail de entrada ou saida."""
+
+    bloqueado: bool = Field(description="True se o fluxo deve ser interrompido")
+    motivo: str | None = Field(None, description="Motivo do bloqueio, se houver")
+    achados: list[AchadoGuardrail] = Field(
+        default_factory=list, description="Achados mascarados ou bloqueantes"
+    )
+
+
 class CidSugerido(BaseModel):
     """Categoria do CID-10 sugerida para um sintoma."""
 
@@ -16,8 +36,17 @@ class State(BaseModel):
 
     paciente_id: str = Field(..., description="ID do paciente")
     prontuario: str = Field(..., description="Conteudo do prontuario medico")
+    # Guardrails
+    guardrail_entrada: ResultadoGuardrail | None = Field(
+        None, description="Resultado do guardrail de entrada"
+    )
+    guardrail_saida: ResultadoGuardrail | None = Field(
+        None, description="Resultado do guardrail de saida (somente mascara)"
+    )
     # Preenchidos pelo no de atendimento (triagem): nao vem na entrada.
-    urgencia: Literal["urgente", "nao_urgente"] | None = Field(None, description="Nivel de urgencia do atendimento")
+    urgencia: Literal["urgente", "nao_urgente"] | None = Field(
+        None, description="Nivel de urgencia do atendimento"
+    )
     destino: Literal[
         "dermatologico", "cardiologico", "neurologico", "urgente", "clinicogeral"
     ] | None = Field(
@@ -46,7 +75,9 @@ class State(BaseModel):
         None, description="Conduta ou proximos passos sugeridos pelo neurologista"
     )
     # Preenchidos pelo no clinicogeral.
-    avaliacao_clinica: str | None = Field(None, description="Parecer de clinica geral / atencao primaria")
+    avaliacao_clinica: str | None = Field(
+        None, description="Parecer de clinica geral / atencao primaria"
+    )
     conduta_clinica: str | None = Field(
         None, description="Conduta ou proximos passos sugeridos pelo clinico geral"
     )
